@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.99.0/css/materialize.min.css">
+    <style>
+        #loadBar {
+            display: none;
+        }
+    </style>
+</head>
+<body class="container">
+<div id="loadBar" class="progress">
+    <div class="indeterminate"></div>
+</div>
+<div id="mainContent" class="row">
+    <a href="https://cyberdean.fr">Absolute link</a><br>
+    <a href="..">Relative link</a><br>
+    <a href="https://cyberdean.fr" target="_blank">_blank or _top is ignored</a><br>
+    <a href="#mainContent"># Anchor also ignored</a><br>
+</div>
+
+<script src="../ajaxPageLoading.js"></script>
+<script>
+  APL.setCallback(function(url, params) {
+    console.log("Success");
+  });
+  APL.setFailCallback(function(url, data) {
+    console.log("Error");
+  });
+  APL.setLoader(document.getElementById('loadBar'));
+  APL.setContainer(document.getElementById('mainContent'));
+
+  window.addEventListener('scroll', function() {
+    const h = window.scrollTop;
+    const loadBar = document.getElementById("loadBar");
+    if (h >= 64) {
+      loadBar.style.position = 'fixed';
+      loadBar.style.zIndex = '999';
+      loadBar.style.top = '0px';
+    }
+    else {
+      loadBar.style.position = 'relative';
+    }
+  });
+</script>
+</body>
+</html>
