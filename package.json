@@ -1,6 +1,6 @@
 {
   "name": "ajax-page-loading",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Permet un chargement asynchrone du contenu, avec gestion de l'url de la page. Ainsi que de l'historique de navigation. Les liens _blank, _top, # et sans href sont ignorés. (Supporte aussi bien les liens absolu que relatifs)",
   "main": "ajaxPageLoading.js",
   "scripts": {
@@ -8,12 +8,12 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Dean79000/ajax-page-loading.git"
+    "url": "git+https://github.com/Cyberdean/ajax-page-loading.git"
   },
-  "author": "Dean79000",
+  "author": "Cyberdean",
   "license": "GNU GPLv3",
   "bugs": {
-    "url": "https://github.com/Dean79000/ajax-page-loading/issues"
+    "url": "https://github.com/Cyberdean/ajax-page-loading/issues"
   },
-  "homepage": "https://github.com/Dean79000/ajax-page-loading#readme"
+  "homepage": "https://github.com/Cyberdean/ajax-page-loading#readme"
 }

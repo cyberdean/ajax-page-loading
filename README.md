@@ -2,9 +2,6 @@
 Permet un chargement asynchrone du contenu, avec gestion de l'url de la page. Ainsi que de l'historique de navigation.
 Les liens _blank, _top, # et sans href sont ignorés. (Supporte aussi bien les liens absolu que relatifs)
 
-
-[Packagist](https://packagist.org/packages/dean79000/ajax-page-loading)
-
 ## Avantages / Pourquoi utiliser de l'ajax ?
 
 Le premier est tout simplement que l'internaute ai moins de données à télécharger à chaque changement de page, ce qui de fait accélère le chargement.
@@ -41,6 +38,13 @@ APL.setFailCallback(function(url, data) {
 Définir la barre du chargement /loader ajax (qui sera affiché / caché lors des requêtes ajax) :
 ```javascript
 APL.setLoader(document.getElementById('loaderBar'));
+```
+
+Définir si une réponse doit être considéré comme un succès :
+```javascript
+APL.isSuccessCallback = function(request, data) {
+    return request.status < 400 || typeof data !== 'undefined' && typeof data.view !== 'undefined';
+};
 ```
 
 ### Ajax

@@ -1,13 +1,14 @@
 /* ===========================================================
  * ajaxPageLoading - Dev version
  * ===========================================================
- * Copyright 2016-2018 Dean79000
+ * Copyright 2016-2020 Cyberdean
  * https://cyberdean.fr
  *
  * Permet un chargement asynchrone du contenu, avec gestion de l'url,
  * du titre de la page. Ainsi que de l'historique de navigation.
+ * Gère le préchargement avant le clic.
  *
- * https://github.com/Dean79000/ajax-page-loading
+ * https://github.com/cyberdean/ajax-page-loading
  * Under GNU GENERAL PUBLIC LICENSE Version 3
  *
  * ========================================================== */
@@ -16,6 +17,10 @@ const APL = {
   container: null,
   callback: null,
   failCallback: null,
+  preloadMap: {},
+  isSuccessCallback: function(request){
+    return request.status < 400;
+  },
   setFailCallback: function(callback) {
     this.failCallback = callback;
   },
@@ -38,48 +43,43 @@ const APL = {
 
     const request = new XMLHttpRequest();
     request.onreadystatechange = function() {
-      if (request.readyState < 4) {
+      if (request.readyState !== 4) {
         // handle preload
         return;
       }
-      if (request.status !== 200) {
-        // handle error
-        if (APL.failCallback != null) {
-          const data = JSON.parse(request.responseText);
+
+      try {
+        const data = JSON.parse(request.responseText);
+        if (APL.isSuccessCallback(request, data)) {
+          // handle successful request
+          if (textContent != null && href != null) {
+            history.pushState(res, textContent, href); // Add an item to the history log
+          }
+          APL.container.innerHTML = data.view;
+          if (APL.callback != null) {
+            APL.callback(res, data.params);
+          }
+          APL.addListener();
+        }
+        else if (APL.failCallback != null) {  // handle error
           APL.failCallback(res, data);
         }
-
-        if (APL.loader != null) {
-          APL.loader.style.display = 'none';
-        }
-        return;
       }
-      if(request.readyState === 4) {
-        // handle successful request
-        if (textContent != null && href != null) {
-          history.pushState(res, textContent, href); // Add an item to the history log
+      catch {
+        // handle error
+        if (APL.failCallback != null) {
+          APL.failCallback(res, data);
         }
-
-        const data = JSON.parse(request.responseText);
-
-        APL.container.innerHTML = data.view;
-        if (APL.callback != null) {
-          APL.callback(res, data.params);
-        }
-        APL.addListener();
-
-        document.getElementById(APL.container).innerHTML = request.responseText;
-
-        if (APL.loader != null) {
-          APL.loader.style.display = 'none';
-        }
+      }
+      if (APL.loader != null) {
+        APL.loader.style.display = 'none';
       }
     };
-    request.open('GET', res, true);
+    request.open('GET', res + (res.indexOf('?') === -1 ? '?' : '&') + 'j=1', true);
     request.setRequestHeader('Accept', 'application/json');
     request.send();
   },
-  clickHandler: function(event) {
+  getUrl: function(event) {
     //currentTarget au lieu de target car currentTarget référance toujours l'élément auquel est attaché l'event. Sinon target renvoi l'élément contenu dans l'élément qui a l'event
     let url;
     let hrefAttr = event.currentTarget.getAttribute('href');
@@ -94,7 +94,10 @@ const APL = {
     else {
       url = event.currentTarget.getAttribute('href');
     }
-
+    return url;
+  },
+  clickHandler: function(event) {
+    const url = APL.getUrl(event);
     APL.loadAjax(url, event.currentTarget.textContent, event.currentTarget.href);
 
     // Revert to a previously saved state
@@ -112,6 +115,25 @@ const APL = {
      photo: photoEl.src
      }, document.title, document.location.href);*/
     return event.preventDefault();
+  },
+  onMouseOverHandler: function (event) {
+    const url = APL.getUrl(event);
+    if (APL.preloadMap[url] !== false) {
+      APL.preloadMap[url] = setTimeout(function () {
+        APL.preloadMap[url] = false; // avoid to preload multiple times
+        const request = new XMLHttpRequest();
+        request.open('GET', url + (url.indexOf('?') === -1 ? '?' : '&') + 'j=1', true);
+        request.setRequestHeader('Accept', 'application/json');
+        request.send();
+      }, 300);
+    }
+  },
+  onMouseOutHandler: function(event) {
+    const url = APL.getUrl(event);
+    if (APL.preloadMap[url] !== false) {
+      clearTimeout(APL.preloadMap[url]);
+      delete APL.preloadMap[url];
+    }
   },
   addListener: function() {
     const linkEls = document.getElementsByTagName('a');
@@ -134,6 +156,19 @@ const APL = {
 
       linkEls[i].removeEventListener('click', this.clickHandler);
       linkEls[i].addEventListener('click', this.clickHandler);
+
+      // preload
+      linkEls[i].removeEventListener("mouseover", this.onMouseOverHandler);
+      linkEls[i].addEventListener("mouseover", this.onMouseOverHandler);
+      linkEls[i].removeEventListener("mouseout", this.onMouseOutHandler);
+      linkEls[i].addEventListener("mouseout", this.onMouseOutHandler);
+      // preload touch events
+      linkEls[i].removeEventListener("touchstart", this.onMouseOverHandler);
+      linkEls[i].addEventListener("touchstart", this.onMouseOverHandler);
+      linkEls[i].removeEventListener("touchcancel", this.onMouseOutHandler);
+      linkEls[i].addEventListener("touchcancel", this.onMouseOutHandler);
+      linkEls[i].removeEventListener("touchend", this.onMouseOutHandler);
+      linkEls[i].addEventListener("touchend", this.onMouseOutHandler);
     }
   }
 };

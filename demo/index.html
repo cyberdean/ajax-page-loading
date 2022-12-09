@@ -31,6 +31,9 @@
   });
   APL.setLoader(document.getElementById('loadBar'));
   APL.setContainer(document.getElementById('mainContent'));
+  APL.isSuccessCallback = function(request, data) {
+      return request.status < 400 || typeof data !== 'undefined' && typeof data.view !== 'undefined';
+  };
 
   window.addEventListener('scroll', function() {
     const h = window.scrollTop;
